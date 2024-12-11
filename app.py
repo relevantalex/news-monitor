@@ -14,14 +14,22 @@ st.set_page_config(
 )
 
 # Initialize OpenAI client
-if 'OPENAI_API_KEY' in st.secrets:
-    client = OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
-else:
+def init_openai_client():
+    try:
+        if 'OPENAI_API_KEY' in st.secrets:
+            return OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
+    except:
+        pass
+    
+    # If secrets fail, ask for API key in sidebar
     api_key = st.sidebar.text_input('Enter OpenAI API key:', type='password')
     if not api_key:
         st.warning('Please enter your OpenAI API key to proceed.')
         st.stop()
-    client = OpenAI(api_key=api_key)
+    return OpenAI(api_key=api_key)
+
+# Create client at startup
+client = init_openai_client()
 
 def search_naver_news(keyword, start_date, end_date):
     """Search Naver News with date filtering"""
