@@ -5,7 +5,6 @@ import requests
 from bs4 import BeautifulSoup
 import openai
 import time
-from googlesearch import search
 
 # Page config
 st.set_page_config(
@@ -89,18 +88,18 @@ def get_summary_and_category(title):
 def main():
     st.title("📰 News Monitoring Dashboard")
     
-    # Sidebar settings
-    st.sidebar.title("Settings")
-    
     # Date selection
-    start_date = st.sidebar.date_input(
-        "Start Date",
-        datetime.now() - timedelta(days=7)
-    )
-    end_date = st.sidebar.date_input(
-        "End Date",
-        datetime.now()
-    )
+    col1, col2 = st.columns(2)
+    with col1:
+        start_date = st.date_input(
+            "Start Date",
+            datetime.now() - timedelta(days=7)
+        )
+    with col2:
+        end_date = st.date_input(
+            "End Date",
+            datetime.now()
+        )
     
     # Keywords
     default_keywords = [
@@ -109,24 +108,23 @@ def main():
         '청정수소', '암모니아'
     ]
     
-    keywords = st.sidebar.multiselect(
+    keywords = st.multiselect(
         "Select Keywords",
         default_keywords,
-        default=default_keywords[:3]  # Default to first 3 keywords
+        default=default_keywords[:3]
     )
     
     # Custom keyword
-    custom_keyword = st.sidebar.text_input("Add Custom Keyword")
+    custom_keyword = st.text_input("Add Custom Keyword")
     if custom_keyword:
         keywords.append(custom_keyword)
     
     # Run button
-    if st.sidebar.button("🔍 Get News"):
+    if st.button("🔍 Get News"):
         if not keywords:
             st.warning("Please select at least one keyword")
             return
         
-        # Create progress elements
         progress_bar = st.progress(0)
         status_text = st.empty()
         
@@ -158,7 +156,7 @@ def main():
         df = pd.DataFrame(processed_articles)
         df = df.drop_duplicates(subset=['Synopsis'])
         
-        # Clear progress elements
+        # Clear progress
         progress_bar.empty()
         status_text.empty()
         
@@ -167,32 +165,13 @@ def main():
         st.dataframe(df, use_container_width=True)
         
         # Download options
-        col1, col2 = st.columns(2)
-        
-        # CSV download
-        with col1:
-            csv = df.to_csv(index=False).encode('utf-8-sig')
-            st.download_button(
-                "📥 Download CSV",
-                csv,
-                f"news_report_{datetime.now().strftime('%Y%m%d')}.csv",
-                "text/csv"
-            )
-        
-        # Excel download
-        with col2:
-            buffer = pd.ExcelWriter(f"news_report_{datetime.now().strftime('%Y%m%d')}.xlsx")
-            df.to_excel(buffer, index=False)
-            buffer.save()
-            
-            with open(buffer.path, 'rb') as f:
-                excel_data = f.read()
-                st.download_button(
-                    "📥 Download Excel",
-                    excel_data,
-                    f"news_report_{datetime.now().strftime('%Y%m%d')}.xlsx",
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                )
+        csv = df.to_csv(index=False).encode('utf-8-sig')
+        st.download_button(
+            "📥 Download CSV",
+            csv,
+            f"news_report_{datetime.now().strftime('%Y%m%d')}.csv",
+            "text/csv"
+        )
 
 if __name__ == "__main__":
     main()
