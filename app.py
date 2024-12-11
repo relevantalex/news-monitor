@@ -4,7 +4,6 @@ from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
 import time
-import os
 from openai import OpenAI
 
 # Page config
@@ -14,21 +13,21 @@ st.set_page_config(
     layout="wide"
 )
 
-# Initialize session state for OpenAI client
-if 'openai_client' not in st.session_state:
-    st.session_state.openai_client = None
-
-# Get API key and initialize client
-if st.session_state.openai_client is None:
-    api_key = st.sidebar.text_input('Enter OpenAI API key:', type='password')
+# Create OpenAI client using session state
+if "openai_client" not in st.session_state:
+    api_key = st.text_input("Enter your OpenAI API key:", type="password")
     if api_key:
         try:
-            st.session_state.openai_client = OpenAI(api_key=api_key)
-            st.sidebar.success('API key set successfully!')
+            st.session_state.openai_client = OpenAI(
+                api_key=api_key,
+                base_url="https://api.openai.com/v1"
+            )
+            st.success("✅ API key set successfully!")
         except Exception as e:
-            st.sidebar.error(f'Error initializing OpenAI client: {str(e)}')
+            st.error(f"Error initializing OpenAI client: {str(e)}")
+            st.stop()
     else:
-        st.warning('Please enter your OpenAI API key to proceed.')
+        st.warning("Please enter your OpenAI API key to proceed.")
         st.stop()
 
 def search_naver_news(keyword, start_date, end_date):
