@@ -3,8 +3,9 @@ import pandas as pd
 from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
-from openai import OpenAI
 import time
+import os
+from openai import OpenAI
 
 # Page config
 st.set_page_config(
@@ -13,23 +14,22 @@ st.set_page_config(
     layout="wide"
 )
 
-# Initialize OpenAI client
-def init_openai_client():
-    try:
-        if 'OPENAI_API_KEY' in st.secrets:
-            return OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
-    except:
-        pass
-    
-    # If secrets fail, ask for API key in sidebar
+# Initialize session state for OpenAI client
+if 'openai_client' not in st.session_state:
+    st.session_state.openai_client = None
+
+# Get API key and initialize client
+if st.session_state.openai_client is None:
     api_key = st.sidebar.text_input('Enter OpenAI API key:', type='password')
-    if not api_key:
+    if api_key:
+        try:
+            st.session_state.openai_client = OpenAI(api_key=api_key)
+            st.sidebar.success('API key set successfully!')
+        except Exception as e:
+            st.sidebar.error(f'Error initializing OpenAI client: {str(e)}')
+    else:
         st.warning('Please enter your OpenAI API key to proceed.')
         st.stop()
-    return OpenAI(api_key=api_key)
-
-# Create client at startup
-client = init_openai_client()
 
 def search_naver_news(keyword, start_date, end_date):
     """Search Naver News with date filtering"""
@@ -80,7 +80,7 @@ def get_summary_and_category(title):
         Synopsis: [synopsis]
         """
         
-        response = client.chat.completions.create(
+        response = st.session_state.openai_client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}]
         )
