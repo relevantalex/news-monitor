@@ -3,7 +3,7 @@ import pandas as pd
 from datetime import datetime, timedelta
 import requests
 from bs4 import BeautifulSoup
-import openai
+from openai import OpenAI
 import time
 
 # Page config
@@ -13,14 +13,15 @@ st.set_page_config(
     layout="wide"
 )
 
-# Initialize OpenAI API key
+# Initialize OpenAI client
 if 'OPENAI_API_KEY' in st.secrets:
-    openai.api_key = st.secrets['OPENAI_API_KEY']
+    client = OpenAI(api_key=st.secrets['OPENAI_API_KEY'])
 else:
-    openai.api_key = st.sidebar.text_input('Enter OpenAI API key:', type='password')
-    if not openai.api_key:
+    api_key = st.sidebar.text_input('Enter OpenAI API key:', type='password')
+    if not api_key:
         st.warning('Please enter your OpenAI API key to proceed.')
         st.stop()
+    client = OpenAI(api_key=api_key)
 
 def search_naver_news(keyword, start_date, end_date):
     """Search Naver News with date filtering"""
@@ -71,7 +72,7 @@ def get_summary_and_category(title):
         Synopsis: [synopsis]
         """
         
-        response = openai.ChatCompletion.create(
+        response = client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=[{"role": "user", "content": prompt}]
         )
